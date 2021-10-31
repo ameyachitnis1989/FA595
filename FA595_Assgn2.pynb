@@ -1,0 +1,238 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "FE 595 Assignment 2\n",
+    "Ameya Chitnis"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import requests \n",
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "from bs4 import BeautifulSoup\n",
+    "import re\n",
+    "import nltk\n",
+    "from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "Name=[]\n",
+    "Purpose=[]\n",
+    "pattern1 = re.compile('Name:')\n",
+    "pattern2 = re.compile('Purpose:')\n",
+    "\n",
+    "\n",
+    "for i in range(50):\n",
+    "    source= requests.get(\"http://3.85.131.173:8000/random_company\")\n",
+    "    com_html= BeautifulSoup(source.text,'html.parser')    \n",
+    "    Name.append(com_html.find('li',text=pattern1).text.replace(\"Name: \",\"\"))\n",
+    "    Purpose.append(com_html.find('li',text=pattern2).text.replace(\"Purpose: \",\"\"))\n",
+    "    \n",
+    "com_df = pd.DataFrame()\n",
+    "com_df['Name']  = Name\n",
+    "com_df['Purpose']  = Purpose\n",
+    "\n",
+    "np.savetxt(r'E:/FA595/Assign1.txt',com_df.values,fmt='%s',delimiter=';',header=\"Name;Purpose\")\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "senti_df = pd.read_csv(\n",
+    "    'E:/FA595/Assign1.txt', sep=\";\")\n",
+    "\n",
+    "senti_df=senti_df.append(pd.read_excel('E:/FA595/Rishi.xlsx').rename({'Company Name': '# Name'}, axis='columns')) \n",
+    "senti_df=senti_df.append(pd.read_csv('E:/FA595/Yash.csv').rename({'Name': '# Name'}, axis='columns')) \n",
+    "senti_df=senti_df.append(pd.read_csv('E:/FA595/Jugal.csv').rename({'Name': '# Name'}, axis='columns')) \n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "analyzer= SentimentIntensityAnalyzer()\n",
+    "\n",
+    "senti_df['compound'] = [analyzer.polarity_scores(x)['compound'] for x in senti_df['Purpose']]\n",
+    "senti_df['neg'] = [analyzer.polarity_scores(x)['neg'] for x in senti_df['Purpose']]\n",
+    "senti_df['neu'] = [analyzer.polarity_scores(x)['neu'] for x in senti_df['Purpose']]\n",
+    "senti_df['pos'] = [analyzer.polarity_scores(x)['pos'] for x in senti_df['Purpose']]\n",
+    "\n",
+    "senti_df=senti_df.sort_values('compound',ascending=False)\n",
+    "\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1\n",
+      "1\n",
+      "1\n",
+      "1\n",
+      "1\n",
+      "1\n"
+     ]
+    }
+   ],
+   "source": [
+    "senti_df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th># Name</th>\n",
+       "      <th>Purpose</th>\n",
+       "      <th>compound</th>\n",
+       "      <th>neg</th>\n",
+       "      <th>neu</th>\n",
+       "      <th>pos</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>46</th>\n",
+       "      <td>Martinez Ltd</td>\n",
+       "      <td>Fully-configurable 3rdgeneration conglomeratio...</td>\n",
+       "      <td>-0.1027</td>\n",
+       "      <td>0.189</td>\n",
+       "      <td>0.811</td>\n",
+       "      <td>0.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9</th>\n",
+       "      <td>Pope and Sons</td>\n",
+       "      <td>Programmable intermediate monitoring for explo...</td>\n",
+       "      <td>-0.1027</td>\n",
+       "      <td>0.189</td>\n",
+       "      <td>0.811</td>\n",
+       "      <td>0.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>40</th>\n",
+       "      <td>Townsend PLC</td>\n",
+       "      <td>Programmable tertiary time-frame for utilize ...</td>\n",
+       "      <td>-0.6486</td>\n",
+       "      <td>0.417</td>\n",
+       "      <td>0.583</td>\n",
+       "      <td>0.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>20</th>\n",
+       "      <td>Cooper-Ross</td>\n",
+       "      <td>Profit-focused tangible moderator for cultivat...</td>\n",
+       "      <td>-0.6486</td>\n",
+       "      <td>0.417</td>\n",
+       "      <td>0.583</td>\n",
+       "      <td>0.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>13</th>\n",
+       "      <td>Cox, Cox and Dunlap</td>\n",
+       "      <td>Front-line web-enabled moderator for syndicate...</td>\n",
+       "      <td>-0.6486</td>\n",
+       "      <td>0.417</td>\n",
+       "      <td>0.583</td>\n",
+       "      <td>0.0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                 # Name                                            Purpose  \\\n",
+       "46         Martinez Ltd  Fully-configurable 3rdgeneration conglomeratio...   \n",
+       "9         Pope and Sons  Programmable intermediate monitoring for explo...   \n",
+       "40         Townsend PLC   Programmable tertiary time-frame for utilize ...   \n",
+       "20          Cooper-Ross  Profit-focused tangible moderator for cultivat...   \n",
+       "13  Cox, Cox and Dunlap  Front-line web-enabled moderator for syndicate...   \n",
+       "\n",
+       "    compound    neg    neu  pos  \n",
+       "46   -0.1027  0.189  0.811  0.0  \n",
+       "9    -0.1027  0.189  0.811  0.0  \n",
+       "40   -0.6486  0.417  0.583  0.0  \n",
+       "20   -0.6486  0.417  0.583  0.0  \n",
+       "13   -0.6486  0.417  0.583  0.0  "
+      ]
+     },
+     "execution_count": 30,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "senti_df.tail()"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.5"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
